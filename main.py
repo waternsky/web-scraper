@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import requests
 import json
 from bs4 import BeautifulSoup
@@ -18,6 +20,7 @@ def campus_stats(res: requests.Response, ans: defaultdict) -> None:
     relevant_divs = soup.find_all("div", {
         "class": "bu-stat-inner js-bu-stat-inner"
     })
+    val = {}
     for section in relevant_divs:
         title = section.find("h3", {
             "class": "bu-stat-title"
@@ -26,7 +29,26 @@ def campus_stats(res: requests.Response, ans: defaultdict) -> None:
                        section.find_all("span", {
                         "class": "bu-stat-value-field"
                        })))
-        ans["Campus Stats"].append({title: value})
+        val[title] = value
+    ans["Campus Stats"] = val
+
+
+def community_stats(res: requests.Response, ans: defaultdict) -> None:
+    soup = BeautifulSoup(res.content, "html.parser")
+    relevant_sections = soup.find_all("section", {
+        "class": "stat-section"
+    })
+    for section in relevant_sections:
+        header = section.find("h4", {
+            "class": "stat-group-title"
+        }).get_text().strip()
+        labels = list(map(lambda s: s.get_text(), section.find_all("span", {
+            "class": "stat-label"
+        })))
+        figures = list(map(lambda s: s.get_text(), section.find_all("span", {
+            "class": "stat-figure"
+        })))
+        ans[header] = dict(zip(labels, figures))
 
 
 def main() -> None:
@@ -37,8 +59,9 @@ def main() -> None:
 
     ans = defaultdict(lambda: [])
     campus_stats(res, ans)
+    community_stats(res, ans)
 
-    json_ans = json.dumps(ans)
+    json_ans = json.dumps(ans, indent=4)
     print(json_ans)
 
 

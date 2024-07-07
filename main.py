@@ -62,7 +62,9 @@ def main() -> None:
     community_stats(res, ans)
 
     json_ans = json.dumps(ans, indent=4)
-    print(json_ans)
+
+    with open("out.json", 'w') as f:
+        f.write(json_ans)
 
 
 if __name__ == "__main__":
